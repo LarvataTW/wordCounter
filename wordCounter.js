@@ -38,13 +38,13 @@
         */
         var hasChinese = false;
         var hasSpecial = false;
-        var parent = this;
-        var sum = 0;
-        $(document).on('keyup change paste', function(parent){
+        var _this = this;
+        $(this.element).on('keyup change paste', function(evt){
             
             delay(function(){
               //console.log("原始字串："+$(".cal").val());
               var text = $(".cal").val().split("");
+              var sum = 0;
               
               for(var i = 0; i < text.length; i++){
                   //還原\
@@ -53,7 +53,7 @@
                   //判斷中文，包含則改限制字數為 70
                   if(text[i].charCodeAt(0)> 19967 && text[i].charCodeAt(0) < 40909){
                     hasChinese = true;
-                    parent.limit = 70;
+                    _this.limit = 70;
                   }
                 
                   //判斷特殊符號
@@ -64,18 +64,19 @@
                   sum++;
               }
               console.log("總字數："+sum+"\r有中文"+hasChinese+"\r有特殊符號"+hasSpecial);
-              return parent.limit;
+              _this.showText();
              
               
             }, 1000);
             
             //console.log("result:"+event.result);
+            console.log("limit",_this.limit);
         });
     };
     Count.prototype.showText = function(){
           console.log("Count 物件 > Prototype 實作顯示結果方法");
           //顯示限制字數、字數、則數
-          $(this.callback.displayLimitElement).html(limit);
+          $(this.callback.displayLimitElement).html(this.limit);
           $(this.callback.displayCountElement).html(this.count);
           $(this.callback.displayPostsElement).html(this.posts);
     };
