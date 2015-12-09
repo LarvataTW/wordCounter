@@ -1,14 +1,33 @@
+/**
+* @file 計算單則訊息限制字數、目前字數、目前則數
+* @author Olga Huang
+*/
 (function() {
-    /*
-      # Count 物件
+    /**
+    * 延遲使用者設定的毫秒數後執行程式
+    * @function
+    * @name delay
     */
+    var delay = (function(){
+        var timer = 0;
+        return function(callback, ms){
+            clearTimeout (timer);
+            timer = setTimeout(callback, ms);
+        };
+    })();
+    /**
+     * 計算單則訊息限制字數、目前字數、目前則數
+     * @constructor
+     * @param {object} element - 作用中的 <textarea>
+     * @param {object} options - 以下參數可以自訂覆蓋預設值，初始化單則限制字數，使用者設定 > DOM > 預設值
+     * @function counting - 處理運算規則
+     * @function showText - 處理顯示則訊息限制字數、目前字數、目前則數的文字位置
+     */
     var Count = function(element ,options){
         this.element = element;
-
-        //初始化設定值，使用者設定 > DOM > 預設值
-        this.options = $.extend($.fn.wordCount.default,this.element.dataset,options);
+        this.options = $.extend($.fn.wordCount.default,$(".cal").attr("data-limit"),options);
         this.limit = this.options.limit;
-        //如果原有中文值，但刪除所有中文後，改回使用者設定值或預設值
+        //如果原有中文值，但刪除所有中文後，可以改回使用者設定值或預設值
         this.limit_temp = this.options.limit;
         //DOM 不會設定 callback，所以使用者設定 > 預設值
         this.options2 = $.extend($.fn.wordCount.default,options);
@@ -23,9 +42,6 @@
         this.showText();
     };
 
-    /*
-      ## Prototype
-    */
     Count.prototype.counting = function(){
         console.log("Count 物件 > Prototype 實作計算方法");
         /*
@@ -74,27 +90,16 @@
         });
     };
     Count.prototype.showText = function(){
-        console.log("Count 物件 > Prototype 實作顯示結果方法");
         //顯示限制字數、字數、則數
         $(this.callback.displayLimitElement).html(this.limit);
         $(this.callback.displayCountElement).html(this.count);
         $(this.callback.displayPostsElement).html(this.posts);
     };
 
-    /*
-      ###延遲進行
-    */
-    var delay = (function(){
-        var timer = 0;
-        return function(callback, ms){
-            clearTimeout (timer);
-            timer = setTimeout(callback, ms);
-        };
-    })();
-
-    /*
-      # Plugin 本體
-    */
+    /**
+     * 進入點
+     * @param options - 使用者設定值
+     */
     $.fn.wordCount = function(options) {
         return this.each(function() {
             var $this = $(this);
@@ -110,10 +115,10 @@
 
     };
     /*
-      ## Plugin 本體預設值
+      預設值
     */
     $.fn.wordCount.default = {
-	    "limit": 80,
+	    "limit": 160,
 	    "callback":{
 		    "displayLimitElement": ".display-limit",
 		    "displayCountElement": ".display-count",
@@ -121,12 +126,15 @@
 	    }
     };
 })();
-/*
-  # 使用者可設定值：
-  ## limit:限制字數
-  ## limitover:是否可以超過限制字數
-  ## callback:計算過後，限制字數、字數、則數顯示位置
-*/
+/**
+ * 使用者自訂單則訊息限制字數，及顯示單則訊息限制字數、目前字數、目前則數的位置
+ * @type {object} - 放自訂選項的物件
+ * @property limit - 限制字數
+ * @callback callback - 指定單則限制字數、目前字數、目前則數的顯示位置，以下用物件包起來：
+ * @property callback.displayLimitElement - 指定單則限制字數位置
+ * @property callback.displayCountElement - 指定目前字數位置
+ * @property callback.displayPostsElement": - 指定目前則數位置
+ */
 $(".cal").wordCount({
     "limit": 160,
     "callback":{
