@@ -3,28 +3,28 @@
       # Count 物件
     */
     var Count = function(element ,options){
-        //console.log("進入 Count 物件");
         this.element = element;
-    
+
         //初始化設定值，使用者設定 > DOM > 預設值
         this.options = $.extend($.fn.wordCount.default,this.element.dataset,options);
-        this.limit = options.limit;
-        //console.log("\t 初始的限制字數："+this.limit);
-        this.callback = options.callback;
-        //console.log("\t 指定顯示結果元素位置：\r\t 限制字數："+this.callback.displayLimitElement+"\r\t 字數："+this.callback.displayCountElement+"\r\t 則數："+this.callback.displayPostsElement);
-        //初始化要被計算的值
+        this.limit = this.options.limit;
+        //如果原有中文值，但刪除所有中文後，改回使用者設定值或預設值
+        this.limit_temp = this.options.limit;
+        //DOM 不會設定 callback，所以使用者設定 > 預設值
+        this.options2 = $.extend($.fn.wordCount.default,options);
+        this.callback = this.options2.callback;
+        //初始化計算中產生，且要印出的值
         this.count = 0;
         this.posts = 1;
-      
+
+
         //計算後顯示
         this.counting();
-        console.log(this.limit);
         this.showText();
     };
-  
-  
-    /* 
-      ## Prototype 
+
+    /*
+      ## Prototype
     */
     Count.prototype.counting = function(){
         console.log("Count 物件 > Prototype 實作計算方法");
@@ -34,53 +34,53 @@
           2.用for迴圈讀取每個字，用 charCodeAt 字元的unicode 數字
             2.1包含中文(19968~40908)，限制字數改為70
             2.2[\]^{|}~(91-94,123-126)，算兩個字
-          3.超過限制字數，則數增加
+          3.超過限制字數，則數增加，則數 ＝（字數/限制字數)
         */
-        var hasChinese = false;
-        var hasSpecial = false;
         var _this = this;
         $(this.element).on('keyup change paste', function(evt){
-            
+            var hasChinese = false;
+            var hasSpecial = false;
             delay(function(){
-              //console.log("原始字串："+$(".cal").val());
-              var text = $(".cal").val().split("");
-              var sum = 0;
-              
-              for(var i = 0; i < text.length; i++){
-                  //還原\
-                  if(text[i] == "\\"){ text[i] = "\\\\"; }
-                
-                  //判斷中文，包含則改限制字數為 70
-                  if(text[i].charCodeAt(0)> 19967 && text[i].charCodeAt(0) < 40909){
-                    hasChinese = true;
-                    _this.limit = 70;
-                  }
-                
-                  //判斷特殊符號
-                  if((text[i].charCodeAt(0)> 90 && text[i].charCodeAt(0) < 95) || (text[i].charCodeAt(0)> 122 && text[i].charCodeAt(0) < 127)){
-                    hasSpecial = true;
+                //console.log("原始字串："+$(".cal").val());
+                var text = $(".cal").val().split("");
+                var sum = 0;
+                for(var i = 0; i < text.length; i++){
+                    //還原\
+                    if(text[i] == "\\"){ text[i] = "\\\\"; }
+
+                    //判斷中文，包含則改限制字數為 70
+                    if(text[i].charCodeAt(0)> 19967 && text[i].charCodeAt(0) < 40909){
+                        hasChinese = true;
+                        _this.limit = 70;
+                    }else{
+                        hasChinese = false;
+                        //恢復設定值
+                        _this.limit = _this.limit_temp;
+                    }
+
+                    //判斷特殊符號
+                    if((text[i].charCodeAt(0)> 90 && text[i].charCodeAt(0) < 95) || (text[i].charCodeAt(0)> 122 &&  text[i].charCodeAt(0) < 127)){
+                        hasSpecial = true;
+                        sum++;
+                    }
                     sum++;
-                  }
-                  sum++;
-              }
-              console.log("總字數："+sum+"\r有中文"+hasChinese+"\r有特殊符號"+hasSpecial);
-              _this.showText();
-             
-              
-            }, 1000);
-            
-            //console.log("result:"+event.result);
-            console.log("limit",_this.limit);
+
+                }
+                _this.count = sum;
+                _this.posts = Math.ceil(_this.count/_this.limit);
+                console.log("總字數："+_this.count+", 含中文："+hasChinese+", 含符號："+hasSpecial+", 則數："+_this.posts+", 限制字數："+_this.limit);
+                _this.showText();
+            }, 500);
         });
     };
     Count.prototype.showText = function(){
-          console.log("Count 物件 > Prototype 實作顯示結果方法");
-          //顯示限制字數、字數、則數
-          $(this.callback.displayLimitElement).html(this.limit);
-          $(this.callback.displayCountElement).html(this.count);
-          $(this.callback.displayPostsElement).html(this.posts);
+        console.log("Count 物件 > Prototype 實作顯示結果方法");
+        //顯示限制字數、字數、則數
+        $(this.callback.displayLimitElement).html(this.limit);
+        $(this.callback.displayCountElement).html(this.count);
+        $(this.callback.displayPostsElement).html(this.posts);
     };
-    
+
     /*
       ###延遲進行
     */
@@ -91,7 +91,7 @@
             timer = setTimeout(callback, ms);
         };
     })();
-  
+
     /*
       # Plugin 本體
     */
@@ -107,21 +107,20 @@
               data[options].apply(data,argumentArray);
             }
         });
-  
+
     };
     /*
       ## Plugin 本體預設值
     */
     $.fn.wordCount.default = {
-	    "limit": 160,
-	    "limitOver": true,
+	    "limit": 80,
 	    "callback":{
 		    "displayLimitElement": ".display-limit",
 		    "displayCountElement": ".display-count",
             "displayPostsElement": ".display-posts"
 	    }
     };
-})(); 
+})();
 /*
   # 使用者可設定值：
   ## limit:限制字數
@@ -129,10 +128,10 @@
   ## callback:計算過後，限制字數、字數、則數顯示位置
 */
 $(".cal").wordCount({
-    "limit": 80, 
+    "limit": 160,
     "callback":{
         "displayLimitElement": ".limit",
 		"displayCountElement": ".count",
         "displayPostsElement": ".posts"
     }
-}); 
+});
