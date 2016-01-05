@@ -25,7 +25,7 @@
      */
     var Count = function(element ,options){
         this.element = element;
-        this.options = $.extend($.fn.wordCount.default,$(".cal").attr("data-limit"),options);
+        this.options = $.extend($.fn.wordCount.default,$(this.element).attr("data-limit"),options);
         this.limit = this.options.limit;
         //如果原有中文值，但刪除所有中文後，可以改回使用者設定值或預設值
         this.limit_temp = this.options.limit;
@@ -51,6 +51,7 @@
             2.1包含中文(19968~40908)，限制字數改為70
             2.2[\]^{|}~(91-94,123-126)，算兩個字
           3.超過限制字數，則數增加，則數 ＝（字數/限制字數)
+          4.超過5則訊息顯示alert視窗
         */
         var _this = this;
         $(this.element).on('keyup change paste', function(evt){
@@ -58,20 +59,19 @@
             var hasSpecial = false;
             delay(function(){
                 //console.log("原始字串："+$(".cal").val());
-                var text = $(".cal").val().split("");
+                var text = $(_this.element).val().split("");
                 var sum = 0;
+                var isChinese = [false];
+                //單字迴圈判斷中文或特殊符號
                 for(var i = 0; i < text.length; i++){
-                    //還原\
+                    //還原\特殊符號
                     if(text[i] == "\\"){ text[i] = "\\\\"; }
 
-                    //判斷中文，包含則改限制字數為 70
+                    //判斷中文，並寫入isChinese[i] boolean 陣列
                     if(text[i].charCodeAt(0)> 19967 && text[i].charCodeAt(0) < 40909){
-                        hasChinese = true;
-                        _this.limit = 70;
+                        isChinese[i] = true;
                     }else{
-                        hasChinese = false;
-                        //恢復設定值
-                        _this.limit = _this.limit_temp;
+                        isChinese[i] = false;
                     }
 
                     //判斷特殊符號
@@ -82,8 +82,25 @@
                     sum++;
 
                 }
+                //console.log(isChinese);
+                //確定 isChinese 至少有一個 true，也就是 hasChinese 等於 true，反之為 false
+                $.each(isChinese, function( index, val ) {
+                        if(isChinese[index] === true){
+                          return ( hasChinese = true );
+                        }
+                    return ( isChinese[index] = true );
+                });
+                //根據 hasChinese 修改限制字數
+                if( hasChinese === true){
+                  _this.limit = 70;
+                }else{
+                  _this.limit = 160;
+                }
                 _this.count = sum;
                 _this.posts = Math.ceil(_this.count/_this.limit);
+                if(_this.posts > 5) {
+                    alert("已超過訊息傳送上限5則!");
+                }
                 console.log("總字數："+_this.count+", 含中文："+hasChinese+", 含符號："+hasSpecial+", 則數："+_this.posts+", 限制字數："+_this.limit);
                 _this.showText();
             }, 500);
